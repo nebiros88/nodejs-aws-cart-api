@@ -12,7 +12,7 @@ export class InfraStack extends cdk.Stack {
 
     const nestLambda = new NodejsFunction(this, 'NestLambda', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'main.handler',
+      handler: 'src/main.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
       timeout: cdk.Duration.seconds(10),
       memorySize: 256,
