@@ -1,6 +1,6 @@
 import * as cdk from 'aws-cdk-lib/core';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { Construct } from 'constructs';
@@ -12,10 +12,14 @@ export class InfraStack extends cdk.Stack {
 
     const nestLambda = new NodejsFunction(this, 'NestLambda', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'src/main.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../dist')),
+      entry: path.join(__dirname, '../../src/main.ts'),
+      handler: 'handler',
       timeout: cdk.Duration.seconds(10),
       memorySize: 256,
+      bundling: {
+        target: 'node20',
+        format: OutputFormat.CJS,
+      },
     });
 
     const api = new apigwv2.HttpApi(this, 'NestHttpApi', {
