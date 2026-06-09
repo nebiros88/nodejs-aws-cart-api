@@ -19,6 +19,11 @@ export class InfraStack extends cdk.Stack {
       bundling: {
         target: 'node20',
         format: OutputFormat.CJS,
+        externalModules: [
+          '@nestjs/microservices',
+          '@nestjs/websockets',
+          'class-transformer/storage',
+        ],
       },
       depsLockFilePath: path.join(__dirname, '../../package-lock.json'),
     });
