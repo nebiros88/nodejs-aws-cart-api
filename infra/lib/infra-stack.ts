@@ -20,6 +20,7 @@ export class InfraStack extends cdk.Stack {
         target: 'node20',
         format: OutputFormat.CJS,
       },
+      depsLockFilePath: path.join(__dirname, '../../package-lock.json'),
     });
 
     const api = new apigwv2.HttpApi(this, 'NestHttpApi', {
