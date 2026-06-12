@@ -15,8 +15,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  register(payload: User) {
-    const user = this.usersService.findOne(payload.name);
+  async register(payload: User) {
+    const user = await this.usersService.findOne(payload.name);
 
     if (user) {
       throw new BadRequestException('User with such name already exists');
@@ -26,8 +26,8 @@ export class AuthService {
     return { userId };
   }
 
-  validateUser(name: string, password: string): User {
-    const user = this.usersService.findOne(name);
+  async validateUser(name: string, password: string): Promise<User> {
+    const user = await this.usersService.findOne(name);
 
     if (user) {
       return user;

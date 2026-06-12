@@ -19,12 +19,17 @@ export class CartEntity {
   userId!: string;
 
   @Column({ name: 'created_at', type: 'timestamp' })
-  createdAt!: string;
+  createdAt!: Date;
 
   @Column({ name: 'updated_at', type: 'timestamp' })
-  updatedAt!: string;
+  updatedAt!: Date;
 
-  @Column({ name: 'status', enum: ['OPEN', 'ORDERED'] })
+  @Column({
+    name: 'status',
+    type: 'enum',
+    enum: ['OPEN', 'ORDERED'],
+    default: 'OPEN',
+  })
   status!: 'OPEN' | 'ORDERED';
 
   @ManyToOne(() => UserEntity, (user) => user.carts)

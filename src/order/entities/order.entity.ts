@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-enum OrderStatus {
+export enum OrderStatus {
   OPEN = 'OPEN',
   APPROVED = 'APPROVED',
   CONFIRMED = 'CONFIRMED',

@@ -1,35 +1,48 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
-import { Cart, CartStatuses } from '../models';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { CartStatuses } from '../models';
 import { PutCartPayload } from 'src/order/type';
+import { CartEntity } from '../entities/cart.entity';
+import { CartItemEntity } from '../entities/cartItem.entity';
 
 @Injectable()
 export class CartService {
-  private userCarts: Record<string, Cart> = {};
+  constructor(
+    @InjectRepository(CartEntity)
+    private readonly cartRepository: Repository<CartEntity>,
+    @InjectRepository(CartItemEntity)
+    private readonly cartItemRepository: Repository<CartItemEntity>,
+  ) {}
 
-  findByUserId(userId: string): Cart {
-    return this.userCarts[userId];
+  async findByUserId(userId: string): Promise<CartEntity | null> {
+    return this.cartRepository.findOne({
+      where: {
+        userId,
+        status: CartStatuses.OPEN,
+      },
+      relations: {
+        items: true,
+      },
+    });
   }
 
-  createByUserId(user_id: string): Cart {
-    const timestamp = Date.now();
+  async createByUserId(userId: string): Promise<CartEntity> {
+    const timestamp = new Date();
 
-    const userCart = {
-      id: randomUUID(),
-      user_id,
-      created_at: timestamp,
-      updated_at: timestamp,
+    const cart = this.cartRepository.create({
+      userId,
+      createdAt: timestamp,
+      updatedAt: timestamp,
       status: CartStatuses.OPEN,
-      items: [],
-    };
+    });
 
-    this.userCarts[user_id] = userCart;
-
-    return userCart;
+    return this.cartRepository.save(cart);
   }
 
-  findOrCreateByUserId(userId: string): Cart {
-    const userCart = this.findByUserId(userId);
+  async findOrCreateByUserId(userId: string): Promise<CartEntity> {
+    const userCart = await this.findByUserId(userId);
 
     if (userCart) {
       return userCart;
@@ -38,25 +51,63 @@ export class CartService {
     return this.createByUserId(userId);
   }
 
-  updateByUserId(userId: string, payload: PutCartPayload): Cart {
-    const userCart = this.findOrCreateByUserId(userId);
+  async updateByUserId(
+    userId: string,
+    payload: PutCartPayload,
+  ): Promise<CartEntity> {
+    const cart = await this.findOrCreateByUserId(userId);
 
-    const index = userCart.items.findIndex(
-      ({ product }) => product.id === payload.product.id,
-    );
+    const existingItem = await this.cartItemRepository.findOne({
+      where: {
+        cartId: cart?.id,
+        productId: payload.product.id,
+      },
+    });
 
-    if (index === -1) {
-      userCart.items.push(payload);
-    } else if (payload.count === 0) {
-      userCart.items.splice(index, 1);
+    if (payload.count === 0) {
+      await this.cartItemRepository.delete({
+        cartId: cart?.id,
+        productId: payload.product.id,
+      });
+    } else if (existingItem) {
+      existingItem.count = payload.count;
+      await this.cartItemRepository.save(existingItem);
     } else {
-      userCart.items[index] = payload;
+      const newItem = this.cartItemRepository.create({
+        cartId: cart?.id,
+        productId: payload.product.id,
+        count: payload.count,
+      });
+      await this.cartItemRepository.save(newItem);
     }
 
-    return userCart;
+    cart.updatedAt = new Date();
+    await this.cartRepository.save(cart);
+
+    return this.cartRepository.findOneOrFail({
+      where: {
+        id: cart.id,
+      },
+      relations: {
+        items: true,
+      },
+    });
   }
 
-  removeByUserId(userId): void {
-    this.userCarts[userId] = null;
+  async removeByUserId(userId: string): Promise<void> {
+    const cart = await this.findByUserId(userId);
+
+    if (!cart) return;
+
+    await this.cartRepository.remove(cart);
+  }
+
+  async setOrderedStatus(userId: string): Promise<void> {
+    const cart = await this.findByUserId(userId);
+
+    if (!cart) return;
+
+    cart.status = 'ORDERED';
+    await this.cartRepository.save(cart);
   }
 }

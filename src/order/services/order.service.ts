@@ -1,50 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
-import { Order } from '../models';
-import { CreateOrderPayload, OrderStatus } from '../type';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
+
+import { OrderEntity, OrderStatus } from '../entities/order.entity';
+import { CreateOrderPayload } from '../type';
 
 @Injectable()
 export class OrderService {
-  private orders: Record<string, Order> = {};
+  constructor(
+    @InjectRepository(OrderEntity)
+    private readonly orderRepository: Repository<OrderEntity>,
+    private readonly dataSource: DataSource,
+  ) {}
 
-  getAll() {
-    return Object.values(this.orders);
+  async getAll(): Promise<OrderEntity[]> {
+    return this.orderRepository.find();
   }
 
-  findById(orderId: string): Order {
-    return this.orders[orderId];
+  async findById(orderId: string): Promise<OrderEntity | null> {
+    return this.orderRepository.findOneBy({ id: orderId });
   }
 
-  create(data: CreateOrderPayload) {
-    const id = randomUUID() as string;
-    const order: Order = {
-      id,
-      ...data,
-      statusHistory: [
-        {
-          comment: '',
-          status: OrderStatus.Open,
-          timestamp: Date.now(),
-        },
-      ],
-    };
+  async create(data: CreateOrderPayload): Promise<OrderEntity> {
+    return this.dataSource.transaction(async (manager) => {
+      const orderRepository = manager.getRepository(OrderEntity);
 
-    this.orders[id] = order;
+      const order = orderRepository.create({
+        userId: data.userId,
+        cartId: data.cartId,
+        payment: { type: data.payment },
+        delivery: data.address,
+        comments: data.comments,
+        total: data.total,
+        status: OrderStatus.OPEN,
+      });
 
-    return order;
+      return orderRepository.save(order);
+    });
   }
 
-  // TODO add  type
-  update(orderId: string, data: Order) {
-    const order = this.findById(orderId);
+  async update(orderId: string, data: Partial<OrderEntity>) {
+    const order = await this.findById(orderId);
 
     if (!order) {
       throw new Error('Order does not exist.');
     }
 
-    this.orders[orderId] = {
-      ...data,
-      id: orderId,
-    };
+    order.status = data.status ?? order.status;
+    return this.orderRepository.save(order);
   }
 }

@@ -27,6 +27,8 @@ export type CreateOrderDto = {
     lastName: string;
     firstName: string;
   };
+  payment: string;
+  comments: string;
 };
 
 export type PutCartPayload = {
@@ -39,4 +41,6 @@ export type CreateOrderPayload = {
   items: Array<{ productId: string; count: number }>;
   address: Address;
   total: number;
+  payment: string;
+  comments: string;
 };
