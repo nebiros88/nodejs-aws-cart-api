@@ -1,24 +1,36 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-import { CartItem } from './cartItem.entity';
+import { CartItemEntity } from './cartItem.entity';
+import { UserEntity } from 'src/users/entities/user.entity';
 
 @Entity('carts')
-export class Cart {
+export class CartEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;
 
-  @Column({ name: 'created_at', type: 'date' })
+  @Column({ name: 'created_at', type: 'timestamp' })
   createdAt!: string;
 
-  @Column({ name: 'updated_at', type: 'date' })
+  @Column({ name: 'updated_at', type: 'timestamp' })
   updatedAt!: string;
 
   @Column({ name: 'status', enum: ['OPEN', 'ORDERED'] })
   status!: 'OPEN' | 'ORDERED';
 
-  @OneToMany(() => CartItem, (item) => item.cart)
-  items!: CartItem[];
+  @ManyToOne(() => UserEntity, (user) => user.carts)
+  @JoinColumn({ name: 'user_id' })
+  user!: UserEntity;
+
+  @OneToMany(() => CartItemEntity, (item) => item.cart)
+  items!: CartItemEntity[];
 }
