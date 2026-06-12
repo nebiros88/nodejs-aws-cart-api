@@ -97,6 +97,19 @@ The script creates:
 
 - carts table
 - cart_items table
+- orders table
+- users table
 - cart_status enum
+- order_status enum
 
 and inserts test data.
+
+## Database population
+
+Execute the SQL script:
+
+```bash
+database/seed.sql
+```
+
+The script inserts test data.

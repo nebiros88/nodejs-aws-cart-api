@@ -5,37 +5,45 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'cart_status') THEN
         CREATE TYPE cart_status AS ENUM ('OPEN', 'ORDERED');
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_status') THEN
+        CREATE TYPE order_status AS ENUM ('OPEN', 'APPROVED', 'CONFIRMED', 'SENT', 'COMPLETED', 'CANCELLED');
+    END IF;
 END $$;
 
 DROP TABLE IF EXISTS cart_items;
 DROP TABLE IF EXISTS carts;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS users;
 
 CREATE TABLE carts (
-    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id uuid NOT NULL,
-    created_at date NOT NULL,
-    updated_at date NOT NULL,
-    status cart_status NOT NULL
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+    status cart_status NOT NULL DEFAULT 'OPEN'
 );
 
 CREATE TABLE cart_items (
-    cart_id uuid NOT NULL,
-    product_id uuid NOT NULL,
+    cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL,
     count integer NOT NULL CHECK (count > 0),
     PRIMARY KEY (cart_id, product_id),
-    CONSTRAINT fk_cart
-        FOREIGN KEY (cart_id)
-        REFERENCES carts(id)
-        ON DELETE CASCADE
 );
 
-INSERT INTO carts (id, user_id, created_at, updated_at, status)
-VALUES
-    ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', CURRENT_DATE, CURRENT_DATE, 'OPEN'),
-    ('22222222-2222-2222-2222-222222222222', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', CURRENT_DATE, CURRENT_DATE, 'ORDERED');
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL,
+  cart_id UUID NOT NULL REFERENCES carts(id),
+  payment JSONB,
+  delivery JSONB,
+  comments TEXT,
+  status order_status DEFAULT 'OPEN',
+  total NUMERIC(10, 2) NOT NULL DEFAULT 0 
+);
 
-INSERT INTO cart_items (cart_id, product_id, count)
-VALUES
-    ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-1111-1111-1111-aaaaaaaaaaaa', 2),
-    ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-2222-2222-2222-aaaaaaaaaaaa', 1),
-    ('22222222-2222-2222-2222-222222222222', 'bbbbbbbb-1111-1111-1111-bbbbbbbbbbbb', 5);
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL
+);
+
