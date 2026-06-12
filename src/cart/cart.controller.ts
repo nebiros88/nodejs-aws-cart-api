@@ -17,8 +17,8 @@ import { AppRequest, getUserIdFromRequest } from '../shared';
 import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
 import { CreateOrderDto, PutCartPayload } from 'src/order/type';
-import { CartItemEntity } from './entities/cartItem.entity';
 import { OrderEntity } from 'src/order/entities/order.entity';
+import { CartItem } from './models';
 
 @Controller('api/profile/cart')
 export class CartController {
@@ -30,12 +30,12 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
   @Get()
-  async findUserCart(@Req() req: AppRequest): Promise<CartItemEntity[]> {
+  async findUserCart(@Req() req: AppRequest): Promise<CartItem[]> {
     const cart = await this.cartService.findOrCreateByUserId(
       getUserIdFromRequest(req),
     );
 
-    return cart?.items;
+    return cart.items;
   }
 
   // @UseGuards(JwtAuthGuard)
@@ -44,12 +44,14 @@ export class CartController {
   async updateUserCart(
     @Req() req: AppRequest,
     @Body() body: PutCartPayload,
-  ): Promise<CartItemEntity[]> {
+  ): Promise<CartItem[] | null> {
     // TODO: validate body payload...
     const cart = await this.cartService.updateByUserId(
       getUserIdFromRequest(req),
       body,
     );
+
+    if (!cart) return null;
 
     return cart.items;
   }
@@ -78,19 +80,9 @@ export class CartController {
     const order = await this.orderService.create({
       userId,
       cartId,
-      items,
+      items: items.map((i) => ({ productId: i.product.id, count: i.count })),
       address: body.address,
-      total: calculateCartTotal(
-        items.map((i) => ({
-          count: i.count,
-          product: {
-            id: i.productId,
-            title: '',
-            description: '',
-            price: 9.99,
-          },
-        })),
-      ),
+      total: calculateCartTotal(items),
       payment: body.payment,
       comments: body.comments,
     });
