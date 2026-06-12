@@ -9,19 +9,20 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "cdk:deploy": "node --env-file=.env ./node_modules/aws-cdk/bin/cdk deploy"
+    "cdk:synth": "node --env-file=../.env ./node_modules/aws-cdk/bin/cdk synth",
+    "cdk:deploy": "node --env-file=../.env ./node_modules/aws-cdk/bin/cdk deploy"
   },
   "devDependencies": {
     "@types/jest": "^30",
     "@types/node": "^24.10.1",
+    "aws-cdk": "^2.1126.0",
     "jest": "^30",
     "ts-jest": "^29",
-    "aws-cdk": "2.1118.4",
     "ts-node": "^10.9.2",
     "typescript": "~5.9.3"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.248.0",
+    "aws-cdk-lib": "^2.259.0",
     "constructs": "^10.5.0"
   }
 }

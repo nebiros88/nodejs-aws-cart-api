@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/services/users.service';
 import { User } from '../users/models';
@@ -11,8 +11,8 @@ type TokenResponse = {
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
+    @Inject(UsersService) private usersService: UsersService,
+    @Inject(JwtService) private jwtService: JwtService,
   ) {}
 
   async register(payload: User) {
@@ -38,9 +38,9 @@ export class AuthService {
 
   login(user: User, type: 'jwt' | 'basic' | 'default'): TokenResponse {
     const LOGIN_MAP = {
-      jwt: this.loginJWT,
-      basic: this.loginBasic,
-      default: this.loginJWT,
+      jwt: this.loginJWT.bind(this),
+      basic: this.loginBasic.bind(this),
+      default: this.loginJWT.bind(this),
     };
     const login = LOGIN_MAP[type];
 

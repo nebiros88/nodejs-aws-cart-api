@@ -47,9 +47,10 @@ export class OrderEntity {
   delivery!: Record<string, unknown>;
 
   @Column({
+    type: 'text',
     nullable: true,
   })
-  comments!: string;
+  comments!: string | null;
 
   @Column({
     type: 'enum',

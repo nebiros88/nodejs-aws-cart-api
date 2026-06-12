@@ -52,6 +52,7 @@ export class InfraStack extends cdk.Stack {
           '@nestjs/microservices',
           '@nestjs/websockets',
           'class-transformer/storage',
+          'expo-sqlite',
         ],
       },
       depsLockFilePath: path.join(__dirname, '../../package-lock.json'),
@@ -65,6 +66,10 @@ export class InfraStack extends cdk.Stack {
       },
 
       vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
+      allowPublicSubnet: true,
       securityGroups: [lambdaSecurityGroup],
     });
 
