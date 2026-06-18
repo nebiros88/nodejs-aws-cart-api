@@ -1,0 +1,26 @@
+# installed inside Docker, should not be copied from local machine
+node_modules 
+
+# generated build output, Docker should build it itself
+dist
+
+# repository history, increases build context size
+.git
+.gitignore
+
+# secrets must not be copied into image
+.env
+.env.*
+
+# exclude infrastructure code and test files from image
+infra
+test
+
+# exclude .sql scripts for database initialization and population with test data
+database
+
+# test files are not needed in prod container
+*spec.ts
+
+# project info/docs are not needed to be placed into image
+README.md
