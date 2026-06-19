@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Body,
   HttpCode,
+  Inject,
 } from '@nestjs/common';
 import {
   LocalAuthGuard,
@@ -19,7 +20,7 @@ import { AppRequest } from './shared';
 
 @Controller()
 export class AppController {
-  constructor(private authService: AuthService) {}
+  constructor(@Inject(AuthService) private authService: AuthService) {}
 
   @Get(['', 'ping'])
   healthCheck() {
@@ -40,7 +41,7 @@ export class AppController {
   @HttpCode(200)
   @Post('api/auth/login')
   async login(@Request() req: AppRequest) {
-    const token = this.authService.login(req.user, 'basic');
+    const token = this.authService.login(req.user!, 'basic');
 
     return token;
   }
