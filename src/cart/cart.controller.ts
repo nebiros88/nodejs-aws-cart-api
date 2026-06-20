@@ -20,7 +20,7 @@ import { CreateOrderDto, PutCartPayload } from 'src/order/type';
 import { OrderEntity } from 'src/order/entities/order.entity';
 import { CartItem } from './models';
 
-@Controller('api/profile/cart')
+@Controller('api')
 export class CartController {
   constructor(
     @Inject(CartService) private cartService: CartService,
@@ -29,7 +29,7 @@ export class CartController {
 
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
-  @Get()
+  @Get('profile/cart')
   async findUserCart(@Req() req: AppRequest): Promise<CartItem[]> {
     const cart = await this.cartService.findOrCreateByUserId(
       getUserIdFromRequest(req),
@@ -40,7 +40,7 @@ export class CartController {
 
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
-  @Put()
+  @Put('profile/cart')
   async updateUserCart(
     @Req() req: AppRequest,
     @Body() body: PutCartPayload,
@@ -58,7 +58,7 @@ export class CartController {
 
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
-  @Delete()
+  @Delete('profile/cart')
   @HttpCode(HttpStatus.OK)
   clearUserCart(@Req() req: AppRequest) {
     this.cartService.removeByUserId(getUserIdFromRequest(req));
