@@ -3,7 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 
 import { OrderEntity, OrderStatus } from '../entities/order.entity';
-import { CreateOrderPayload } from '../type';
+import { CreateOrderPayload, OrderStatus as OrderModelStatus } from '../type';
+import { Order } from '../models';
+import { CartItemEntity } from 'src/cart/entities/cartItem.entity';
 
 @Injectable()
 export class OrderService {
@@ -11,10 +13,18 @@ export class OrderService {
     @InjectRepository(OrderEntity)
     private readonly orderRepository: Repository<OrderEntity>,
     private readonly dataSource: DataSource,
+    @InjectRepository(CartItemEntity)
+    private readonly cartItemRepository: Repository<CartItemEntity>,
   ) {}
 
-  async getAll(): Promise<OrderEntity[]> {
-    return this.orderRepository.find();
+  async getAll(): Promise<Order[]> {
+    const orderEntities = await this.orderRepository.find();
+
+    const orders = Promise.all(
+      orderEntities.map((o) => this.mapOrderEntityToOrderModel(o)),
+    );
+
+    return orders;
   }
 
   async findById(orderId: string): Promise<OrderEntity | null> {
@@ -48,5 +58,42 @@ export class OrderService {
 
     order.status = data.status ?? order.status;
     return this.orderRepository.save(order);
+  }
+
+  private async mapOrderEntityToOrderModel(
+    orderEntity: OrderEntity,
+  ): Promise<Order> {
+    const items = await this.getCartItems(orderEntity.cartId);
+
+    return {
+      id: orderEntity.id,
+      userId: orderEntity.userId,
+      items,
+      cartId: orderEntity.cartId,
+      address: {
+        address: orderEntity.delivery.address as string,
+        firstName: orderEntity.delivery.firstName as string,
+        lastName: orderEntity.delivery.lastName as string,
+        comment: orderEntity.delivery.comment as string,
+      },
+      statusHistory: [
+        {
+          status: orderEntity.status as unknown as OrderModelStatus.Open,
+          timestamp: 0,
+          comment: '',
+        },
+      ],
+    };
+  }
+
+  private async getCartItems(
+    cartId: string,
+  ): Promise<{ productId: string; count: number }[]> {
+    const items = await this.cartItemRepository.find({ where: { cartId } });
+
+    return items.map(({ count, productId }) => ({
+      productId,
+      count,
+    }));
   }
 }

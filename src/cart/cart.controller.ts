@@ -12,12 +12,11 @@ import {
   Inject,
 } from '@nestjs/common';
 import { BasicAuthGuard } from '../auth';
-import { OrderService } from '../order';
+import { Order, OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
 import { CreateOrderDto, PutCartPayload } from 'src/order/type';
-import { OrderEntity } from 'src/order/entities/order.entity';
 import { CartItem } from './models';
 
 @Controller('api')
@@ -96,7 +95,7 @@ export class CartController {
 
   @UseGuards(BasicAuthGuard)
   @Get('order')
-  async getOrder(): Promise<OrderEntity[]> {
+  async getOrder(): Promise<Order[]> {
     return this.orderService.getAll();
   }
 }
