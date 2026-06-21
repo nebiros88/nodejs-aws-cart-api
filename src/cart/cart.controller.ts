@@ -12,15 +12,14 @@ import {
   Inject,
 } from '@nestjs/common';
 import { BasicAuthGuard } from '../auth';
-import { OrderService } from '../order';
+import { Order, OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
 import { CreateOrderDto, PutCartPayload } from 'src/order/type';
-import { OrderEntity } from 'src/order/entities/order.entity';
 import { CartItem } from './models';
 
-@Controller('api/profile/cart')
+@Controller('api')
 export class CartController {
   constructor(
     @Inject(CartService) private cartService: CartService,
@@ -29,7 +28,7 @@ export class CartController {
 
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
-  @Get()
+  @Get('profile/cart')
   async findUserCart(@Req() req: AppRequest): Promise<CartItem[]> {
     const cart = await this.cartService.findOrCreateByUserId(
       getUserIdFromRequest(req),
@@ -40,7 +39,7 @@ export class CartController {
 
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
-  @Put()
+  @Put('profile/cart')
   async updateUserCart(
     @Req() req: AppRequest,
     @Body() body: PutCartPayload,
@@ -58,7 +57,7 @@ export class CartController {
 
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
-  @Delete()
+  @Delete('profile/cart')
   @HttpCode(HttpStatus.OK)
   clearUserCart(@Req() req: AppRequest) {
     this.cartService.removeByUserId(getUserIdFromRequest(req));
@@ -96,7 +95,7 @@ export class CartController {
 
   @UseGuards(BasicAuthGuard)
   @Get('order')
-  async getOrder(): Promise<OrderEntity[]> {
+  async getOrder(): Promise<Order[]> {
     return this.orderService.getAll();
   }
 }
